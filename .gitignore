@@ -1,2 +1,4 @@
 build/*
 *.o
+battle_client
+battle_server
