@@ -44,7 +44,7 @@ boolean synchronize() {
 	printf("[LOG]Sending ready ack to server\n");
 	client_request ready_req = READY;
 	server_response sr;
-	send_int(server_sock,NULL,ready_req);
+	if(!send_int(server_sock,NULL,ready_req)) return false;
 
 	printf("[LOG]Waiting for synchcronize signal\n");
 
@@ -53,7 +53,7 @@ boolean synchronize() {
 	struct timeval timeout = {60,0};
 	select(server_sock+1,&master,NULL,NULL,&timeout); // TIMER
 	if(FD_ISSET(server_sock,&master)) {
-		recv_int(server_sock,NULL,(int*)&sr);
+		if(!recv_int(server_sock,NULL,(int*)&sr)) return false;
 
 		return sr == MATCH_BEGIN;
 	} else {
@@ -61,6 +61,9 @@ boolean synchronize() {
 		terminate_match();
 		return false;
 	}
+	
+	//can reach this point?
+	return false;
 }
 
 void game_setup(int r) {
@@ -69,9 +72,9 @@ void game_setup(int r) {
   	printf("[LOG]User accepted request\n");
 
 
-	recv(server_sock,(void*)ip,INET_ADDRSTRLEN+1,0);
+	if(recv(server_sock,(void*)ip,INET_ADDRSTRLEN+1,0) < INET_ADDRSTRLEN+1) return;
 
-	recv_int(server_sock,NULL,(int*)&udp_port);
+	if(!recv_int(server_sock,NULL,(int*)&udp_port)) return;
 
 
 	setupAddress(&enemy_addr,udp_port,ip);

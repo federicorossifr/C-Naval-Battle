@@ -26,7 +26,7 @@ boolean recv_int(int ds,sockaddr_in* src,int* d);
 
 ////CHANGE////
 void* receiveMessage(int ds,sockaddr_in* src,int* msgdim);
-void sendMessage(int ds,sockaddr_in* dst,char* message,int length);
+boolean sendMessage(int ds,sockaddr_in* dst,char* message,int length);
 //////////////
 
 char* get_ip_from_socket(int socket);

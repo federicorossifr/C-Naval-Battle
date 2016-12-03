@@ -53,26 +53,3 @@ void print_help(menu_voice menu[],int length) {
 	}
 	printf("\n");
 }
-
-/*
-int main() {
-	char* cmd; int cmdkey;
-	while(1) {
-		printf("%c",prompt);
-		scanf("%ms",&cmd);
-		cmdkey = getKey(cmd,MAIN_MENU,MAIN_COUNT);
-		switch(cmdkey) {
-			case 1:
-				printf("Shows man!\n"); break;
-			case 2: 
-				printf("Shows client!\n"); break;
-			case 3: 
-				return;
-			case 4:
-				scanf("%ms",&cmd);
-				printf("Connecting to %s\n",cmd);
-
-		}
-		discard();
-	}
-}*/

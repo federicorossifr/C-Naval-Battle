@@ -82,19 +82,20 @@ void* receiveMessage(int ds,sockaddr_in* src,int* msgdim) {
 	return buffer;
 }
 
-void sendMessage(int ds,sockaddr_in* dst,char* message,int length) {
+boolean sendMessage(int ds,sockaddr_in* dst,char* message,int length) {
 	int snddBytes;
 	uint16_t nlen = htons(length);
 	snddBytes = sendto(ds,&nlen,sizeof(uint16_t),0,(struct sockaddr*)dst,sizeof(*dst));
 	if(snddBytes < sizeof(uint16_t)) {
 		perror("Length send error");
-		return;
+		return false;
 	}
 	snddBytes = sendto(ds,message,length,0,(struct sockaddr*)dst,sizeof(*dst));
 	if(snddBytes < length) {
 		perror("Mesage send error");
-		return;
+		return false;
 	}
+	return true;
 }
 
 
