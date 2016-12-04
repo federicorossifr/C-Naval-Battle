@@ -1,7 +1,6 @@
 #include "../../Utilities/utility.h"
 #include "cli.h"
 
-
 menu_voice MAIN_MENU[] = {
 	{1,"!help"," --> Shows this help."},
 	{2,"!who"," --> Shows online clients."},

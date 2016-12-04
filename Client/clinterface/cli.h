@@ -4,8 +4,6 @@ typedef struct menu_voice {
 	char* man;
 } menu_voice;
 
-
-
 int get_menu_key(char* value,menu_voice menu[],int length);
 void discard();
 char* get_status(user_status u);

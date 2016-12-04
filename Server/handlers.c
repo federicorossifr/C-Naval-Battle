@@ -127,7 +127,7 @@ void handle_conn_accept(int socket) { //A-->B
 
 	printf("[LOG] Sending connection paramters to client %s\n", requesting->username);
 	if(send(requesting_socket,(void*)requested->ip_addr,INET_ADDRSTRLEN+1,0) < INET_ADDRSTRLEN+1) {
-	  perror("[ERROR] Error sendin IP to requested client");
+	  perror("[ERROR] Error sending IP to requested client");
 	  client_crashed(socket);
 	  return;
 	};

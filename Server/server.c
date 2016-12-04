@@ -26,7 +26,7 @@ void demux_command(client_request cmd,int socket) {
       handle_conn_req(socket);
       break;
     case CONN_ACK:
-      printf("ACKING CONN\n");
+      printf("[LOG] ACKING CONN\n");
       handle_conn_accept(socket);
       break;
     case CONN_REJ:
