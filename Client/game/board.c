@@ -1,7 +1,6 @@
 #include "../../Utilities/utility.h"
 #include "board.h"
 
-const int BATTLESHIPS_NUMBER = 3;
 int remaining_battleships;
 board_cell_status allies[BOARD_SIZE][BOARD_SIZE];
 board_cell_status enemies[BOARD_SIZE][BOARD_SIZE];

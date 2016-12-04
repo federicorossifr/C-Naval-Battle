@@ -42,7 +42,7 @@ typedef enum client_state {
 
 int main(int argc,char* argv[]) {
   if(argc < 3) {
-    printf("Err\n");
+    printf("[ERROR] Usage: ./battle_client <server-ip> <server-port>\n");
     exit(-1);
   }
   client_state state = CLIENT_IDLE;

@@ -15,7 +15,6 @@ extern menu_voice GAME_MENU[];
 extern const int GAME_COUNT;
 extern board_cell_status allies[BOARD_SIZE][BOARD_SIZE];
 extern board_cell_status enemies[BOARD_SIZE][BOARD_SIZE];
-extern const int BATTLESHIPS_NUMBER;
 
 void game();
 void terminate_match() {
