@@ -39,7 +39,13 @@ void handle_disconnect(int socket,fd_set* mstr) {
    	//pending request connection at con disclose
    	if(disconnecting->pending_conn_req_sock > 0 && disconnecting->status == CONNECTING) {
    		printf("[LOG] User was involved in connection, aborting connection\n");
-   		if(!send_int(disconnecting->pending_conn_req_sock,NULL,nak)) client_crashed(disconnecting->pending_conn_req_sock);
+   		if(!send_int(disconnecting->pending_conn_req_sock,NULL,nak)) {
+		  client_crashed(disconnecting->pending_conn_req_sock);
+		  return;
+		}
+		user* other = search_by_fdset_index(head,disconnecting->pending_conn_req_sock);
+		if(!other) return;
+		other->status = FREE;
    	}
 
    	printf("[INFO] User %s disconnected\n",disconnecting->username);

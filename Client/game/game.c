@@ -58,7 +58,6 @@ boolean synchronize() {
 		return sr == MATCH_BEGIN;
 	} else {
 		printf("Synchronize signal wait timed out, terminating\n");
-		terminate_match();
 		return false;
 	}
 	
@@ -72,9 +71,15 @@ void game_setup(int r) {
   	printf("[LOG]User accepted request\n");
 
 
-	if(recv(server_sock,(void*)ip,INET_ADDRSTRLEN+1,0) < INET_ADDRSTRLEN+1) return;
+	if(recv(server_sock,(void*)ip,INET_ADDRSTRLEN+1,0) < INET_ADDRSTRLEN+1) {
+	  terminate_match();
+	  return;
+	}
 
-	if(!recv_int(server_sock,NULL,(int*)&udp_port)) return;
+	if(!recv_int(server_sock,NULL,(int*)&udp_port)) {
+	  terminate_match();
+	  return;
+	}
 
 
 	setupAddress(&enemy_addr,udp_port,ip);
@@ -84,6 +89,7 @@ void game_setup(int r) {
 	ask_place();
 	if(!synchronize()) {
 	  printf("[ERROR] Failed to synchronize clients, leaving game.\n");
+	  terminate_match();
 	  return;
 	}
 	game(t);
