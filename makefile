@@ -6,6 +6,7 @@ LIBF=build/lib
 UTI=Utilities/utility.h
 CLI_DEPS_F = $(LIBF)/utility.o $(LIBF)/cli.o $(LIBF)/board.o $(LIBF)/game.o $(LIBF)/client.o $(LIBF)/doers.o
 SRV_DEPS_F = $(LIBF)/utility.o $(LIBF)/handlers.o $(LIBF)/user.o $(LIBF)/server.o
+TARGETS= battle_client battle_server
 $(LIBF)/utility.o: Utilities/utility.c Utilities/utility.h Utilities/server_codes.h Utilities/client_codes.h
 	$(CC) -c -o $@ $< $(CFLAGS)
 
@@ -39,7 +40,7 @@ battle_server: $(SRV_DEPS_F)
 battle_client: $(CLI_DEPS_F)
 	$(CC) $(CLI_DEPS_F) -o $@ $(CFLAGS)
 
-	
+all: $(TARGETS)	
 	
 clean:
 	rm $(LIBF)/*.o

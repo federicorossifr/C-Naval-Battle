@@ -25,6 +25,7 @@ void terminate_match() {
 void ask_place() {
 	int i; char row; int col;
 	printf("Place your battleships\n");
+	printf("%d\n",BATTLESHIPS_NUMBER);
 	for(i = 0; i < BATTLESHIPS_NUMBER;++i) {
 		printf("Number %d: ",i+1);
 		fflush(stdout);
@@ -81,7 +82,10 @@ void game_setup(int r) {
 	printf("[LOG]Ready to play\n");
 	boards_initialize();
 	ask_place();
-	if(!synchronize()) return;
+	if(!synchronize()) {
+	  printf("[ERROR] Failed to synchronize clients, leaving game.\n");
+	  return;
+	}
 	game(t);
 
 }

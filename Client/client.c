@@ -12,7 +12,7 @@ void do_who(void);
 void do_client_conn_req(char*);
 void do_send_invite_res(client_request res);
 void handle_client_conn_req();
-void game_setup();
+void game_setup(int whostart);
 
 void consume_user_input() {
   char* cmd; int cmdkey;
@@ -106,7 +106,7 @@ int main(int argc,char* argv[]) {
 	    case CLIENT_CONN_REQ2:
 	      msglen = recv_int(server_sock,NULL,(int*)&sr);
 	      if(sr == CONN_OK) {
-		game_setup();
+		game_setup(1);
 	      } else {
 		printf("\nClient prematurely shutted down\n");
 	      }

@@ -148,7 +148,7 @@ void handle_conn_refuse(int socket) {
 	user* requested = search_by_fdset_index(head,socket);
 	int requesting_socket = requested->pending_conn_req_sock;
 	user* requesting = search_by_fdset_index(head,requesting_socket);
-	if(requesting) return;
+	if(!requesting) return;
 	printf("[LOG] Sending connection nak from %s to %s",requested->username,requesting->username);
 	server_response sr = CONN_REJ;
 	requesting->status = FREE;
@@ -164,6 +164,10 @@ void handle_ready(int socket) {
 	int dual_sock = ready->pending_conn_req_sock;
 	if(dual_sock < 0) return;
 	user* dual = search_by_fdset_index(head,dual_sock);
+	if(!dual) {
+	  send_int(socket,NULL,CONN_REJ);
+	  return;
+	}
 	server_response sr = MATCH_BEGIN;
 	ready->status = PLAY_READY;
 	printf("[LOG] User %s is ready to play.\n",ready->username);

@@ -75,7 +75,7 @@ void do_client_conn_req(char* username) {
       break;
     case CONN_OK: 
       printf("User %s accepted your invite\n[LOG] Loading game setup...!\n",username);
-      game_setup();
+      game_setup(0);
       break;
     default: 
       break;

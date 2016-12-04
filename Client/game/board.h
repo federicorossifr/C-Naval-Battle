@@ -1,5 +1,5 @@
 #define BOARD_SIZE 6
-#define BATTLESHIPS_NUMBER 3
+#define BATTLESHIPS_NUMBER 7
 
 typedef enum board_cell_status {
 	ALIVE,HIT,MISSED,EMPTY,E_INVAL
