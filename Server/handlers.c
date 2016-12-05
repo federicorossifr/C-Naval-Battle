@@ -37,15 +37,23 @@ void handle_disconnect(int socket,fd_set* mstr) {
     }
     server_response nak = CONN_REJ; 
     //pending request connection at con disclose
-    if(disconnecting->pending_conn_req_sock > 0 && disconnecting->status == CONNECTING) {
-        printf("[LOG] User was involved in connection, aborting connection\n");
-        if(!send_int(disconnecting->pending_conn_req_sock,NULL,nak)) {
-            client_crashed(disconnecting->pending_conn_req_sock);
-            return;
-        }
+    if(disconnecting->pending_conn_req_sock > 0) {
         user* other = search_by_fdset_index(head,disconnecting->pending_conn_req_sock);
-        if(!other) return;
-        other->status = FREE;
+        if(disconnecting->status == CONNECTING) {
+            printf("[LOG] User was involved in connection, aborting connection\n");
+            if(!send_int(disconnecting->pending_conn_req_sock,NULL,nak)) {
+                client_crashed(disconnecting->pending_conn_req_sock);
+                return;
+            }
+            if(other) other->status = FREE;
+        } else if(disconnecting->status == PLAYING) {
+            printf("[LOG] User was playing, signaling crashed match\n");
+            if(!send_int(disconnecting->pending_conn_req_sock,NULL,MATCH_CRASHED)) {
+                client_crashed(disconnecting->pending_conn_req_sock);
+                return;
+            }
+            if(other) other->status = FREE;
+        }
     }
     
     printf("[INFO] User %s disconnected\n",disconnecting->username);
@@ -185,7 +193,12 @@ void handle_ready(int socket) {
             client_crashed(socket);
             return;
         }
-        if(!send_int(dual_sock,NULL,sr)) client_crashed(socket);
+        if(!send_int(dual_sock,NULL,sr)) {
+            client_crashed(socket);
+            return;
+        }
+        
+        ready->status = dual->status = PLAYING;
         
     }
 }

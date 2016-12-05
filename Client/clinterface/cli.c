@@ -34,8 +34,7 @@ void discard() {
 char* get_status(user_status u) {
     switch(u) {
         case FREE: return "Free"; break;
-        case BUSY: return "Busy"; break;
-        default: return "."; break;
+        default: return "Busy"; break;
     }
 }
 

@@ -192,9 +192,10 @@ void game(game_state t) {
     game_state state = t;
     fd_set master; FD_ZERO(&master);
     fd_set read_ready; FD_ZERO(&read_ready);
-    int fdmax = game_socket;
     FD_SET(game_socket,&master);
     FD_SET(STDIN,&master);
+    FD_SET(server_sock,&master);
+    int fdmax = (game_socket > server_sock)? game_socket:server_sock;
     int fdescriptor;
     char row;int col;
     struct timeval timeout = {60,0};
@@ -251,6 +252,22 @@ void game(game_state t) {
                     if(msglen == 0) {
                         perror("\n[ERROR]recvfrom");
                         exit(1);
+                    }
+                    continue;
+                }
+                
+                if(fdescriptor == server_sock) {
+                    //CAN ONLY RECEIVE MATCH_CRASHED MESSAGE
+                    server_response sr; int res_len;
+                    res_len = recv_int(server_sock,NULL,(int*)&sr);
+                    if(res_len == 0) {
+                        printf("[ERROR] Server crashed\n");
+                        return;
+                    }
+                    if(sr == MATCH_CRASHED) {
+                        printf("[LOG] Your enemy crashed. Nothing to do here\n");
+                        terminate_match();
+                        return;
                     }
                     continue;
                 }
