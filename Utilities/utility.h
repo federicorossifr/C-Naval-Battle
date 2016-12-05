@@ -23,10 +23,7 @@ int setupSocket(sockaddr_in* ind,int tipo);
 boolean send_int(int ds,sockaddr_in* dst,int d);
 boolean recv_int(int ds,sockaddr_in* src,int* d);
 
-
-////CHANGE////
 void* receiveMessage(int ds,sockaddr_in* src,int* msgdim);
 boolean sendMessage(int ds,sockaddr_in* dst,char* message,int length);
-//////////////
 
 char* get_ip_from_socket(int socket);

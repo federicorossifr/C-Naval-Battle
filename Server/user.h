@@ -1,11 +1,11 @@
 typedef struct user {
-	char* username; //
-	int fdset_index; //
-	int udp_port; //
-	char* ip_addr;
-	user_status status;
-	int pending_conn_req_sock;
-	struct user* next;
+    char* username; //
+    int fdset_index; //
+    int udp_port; //
+    char* ip_addr;
+    user_status status;
+    int pending_conn_req_sock;
+    struct user* next;
 } user;
 
 

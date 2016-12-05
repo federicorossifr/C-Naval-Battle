@@ -2,7 +2,7 @@
 #define BATTLESHIPS_NUMBER 7
 
 typedef enum board_cell_status {
-	ALIVE,HIT,MISSED,EMPTY,E_INVAL
+    ALIVE,HIT,MISSED,EMPTY,E_INVAL
 } board_cell_status;
 
 
