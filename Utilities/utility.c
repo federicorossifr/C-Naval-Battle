@@ -58,7 +58,7 @@ void* receiveMessage(int ds,sockaddr_in* src,int* msgdim) {
     uint16_t net_recvMsgDim;
     int msg_dim;
     int recvBytes;
-    unsigned int addrDim;
+    unsigned int addrDim = sizeof(*src);
     void* buffer;
     
     recvBytes = recvfrom(ds,&net_recvMsgDim,sizeof(uint16_t),0,(struct sockaddr*)src,&addrDim);

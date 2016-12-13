@@ -19,6 +19,10 @@ void do_log_in() {
         scanf("%ms",&user_buff);
         printff("Enter your port: ");
         scanf("%d",&port);
+        if(port < 1024) {
+            printf("Invalid port,insert between 1024 and 65535 (included)\n");
+            continue;
+        }
         if(!send_int(server_sock,NULL,log_req)) return;
         if(!sendMessage(server_sock,NULL,user_buff,strlen(user_buff)+1)) return;
         if(!send_int(server_sock,NULL,port)) return;
