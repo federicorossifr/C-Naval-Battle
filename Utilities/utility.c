@@ -119,7 +119,8 @@ boolean send_int(int ds,sockaddr_in* dst,int d) {
 
 boolean recv_int(int ds,sockaddr_in* src,int* d) {
     uint32_t net_int;
-    int recvd; unsigned int addrdim;
+    int recvd; 
+    unsigned int addrdim = sizeof(*src);
     recvd = recvfrom(ds,&net_int,sizeof(uint32_t),0,(struct sockaddr*)src,&addrdim);
     *d = ntohl(net_int);
     if(recvd < sizeof(uint32_t))

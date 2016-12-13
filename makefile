@@ -43,4 +43,4 @@ battle_client: $(CLI_DEPS_F)
 all: $(TARGETS)	
 	
 clean:
-	rm $(LIBF)/*.o
+	rm $(LIBF)/*

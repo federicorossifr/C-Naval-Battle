@@ -48,6 +48,7 @@ boolean place_battelship(char named_row,int column) {
 
 board_cell_status try_hit(char named_row,int column,int* rem) {
     column--;
+    *rem = remaining_battleships;
     int row = get_int_row(named_row);
     if(!is_valid_coord(row,column)) return E_INVAL;
     board_cell_status* cell = &allies[row][column];
@@ -56,7 +57,6 @@ board_cell_status try_hit(char named_row,int column,int* rem) {
         case MISSED:
             *cell = MISSED;
         case HIT:
-            *rem = remaining_battleships; 
             return MISSED; 
             break;
         case ALIVE: *cell = HIT; 
