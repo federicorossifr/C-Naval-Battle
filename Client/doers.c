@@ -38,7 +38,7 @@ void do_disconnect() {
     client_request quit_req = QUIT;
     send_int(server_sock,NULL,quit_req);
     printf("Bye!\n");
-    //also close udp socket
+    close(game_socket);
     close(server_sock);
     exit(0);
 }
@@ -63,7 +63,6 @@ void do_who() {
 void do_client_conn_req(char* username) {
     client_request conn_req = CONN_REQ;
     server_response conn_res;
-    printf("[LOG]Sending connection request...\n");
     if(!send_int(server_sock,NULL,conn_req)) return;
     if(!sendMessage(server_sock,NULL,username,strlen(username)+1)) return;
     if(!recv_int(server_sock,NULL,(int*)&conn_res)) return;
@@ -78,7 +77,7 @@ void do_client_conn_req(char* username) {
             printf("User %s has rejected your request\n",username); 
             break;
         case CONN_OK: 
-            printf("User %s accepted your invite\n[LOG] Loading game setup...!\n",username);
+            printf("User %s accepted your invite\n",username);
             game_setup(0);
             break;
         default: 

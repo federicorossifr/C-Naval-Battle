@@ -17,7 +17,6 @@ void game_setup(int whostart);
 void consume_user_input() {
     char* cmd; int cmdkey;
     scanf("%ms",&cmd);
-    //printf("Command: %s",cmd);
     cmdkey = get_menu_key(cmd,MAIN_MENU,MAIN_COUNT);
     switch(cmdkey) {
         case 1:  //help

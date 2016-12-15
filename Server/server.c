@@ -14,7 +14,7 @@ void handle_conn_refuse(int socket);
 void handle_ready(int socket);
 void handle_match_end(int socket);
 void demux_command(client_request cmd,int socket) {
-    printf("[LOG] Command: %d\n",cmd);
+    printf("[LOG] Received command: %d\n",cmd);
     switch(cmd) {
         case LOG_IN: 
             handle_log_in(socket);
@@ -54,7 +54,7 @@ int main(int argc,char* argv[]) {
     sockaddr_in listenerAddress;
     setupAddress(&listenerAddress,porta,NULL);
     listener = setupServerSocket(&listenerAddress);
-    printf("[SERVER] Waiting for connections on %d (all addresses)\n",atoi(argv[1]));
+    printf("[LOG] Waiting for connections on %d (all addresses)\n",atoi(argv[1]));
     
     FD_ZERO(&master);
     fd_set read_ready; FD_ZERO(&read_ready);
@@ -69,7 +69,7 @@ int main(int argc,char* argv[]) {
             if(FD_ISSET(fdescriptor,&read_ready)) {
                 if(fdescriptor == listener) {
                     //accept client request
-                    printf("[SERVER] Serving client request\n");
+                    printf("[LOG] Serving client request\n");
                     sockaddr_in* client_address = malloc(sizeof(sockaddr_in));
                     memset(client_address,0,sizeof(*client_address));
                     unsigned int client_address_dim = sizeof(*client_address);

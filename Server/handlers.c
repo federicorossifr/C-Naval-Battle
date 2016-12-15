@@ -15,7 +15,7 @@ void handle_log_in(int socket) {
     user* found = search_by_username(head,username);
     if(!found)  {
         add_user(&head,port,username,socket);
-        printf("[INFO] User %s correctedly registered on %s:%d \n",username,get_ip_from_socket(socket),port);
+        printf("[LOG] User %s correctedly registered on %s:%d \n",username,get_ip_from_socket(socket),port);
         res = true;
     }
     else res = false;
@@ -25,14 +25,11 @@ void handle_log_in(int socket) {
 }
 
 void handle_disconnect(int socket,fd_set* mstr) {
-    printf("[LOG] Clearing fdset\n");
     FD_CLR(socket,mstr);
-    printf("[LOG] Closing socket\n");
     close(socket);
-    printf("[LOG] Retrieving user\n");
     user* disconnecting = search_by_fdset_index(head,socket);
     if(disconnecting == NULL) {
-        printf("[INFO] Connection closed by client\n");
+        printf("[LOG] Connection closed by client\n");
         return;
     }
     server_response nak = CONN_REJ; 
@@ -56,7 +53,7 @@ void handle_disconnect(int socket,fd_set* mstr) {
         }
     }
     
-    printf("[INFO] User %s disconnected\n",disconnecting->username);
+    printf("[LOG] User %s disconnected\n",disconnecting->username);
     delete_user(&head,socket);
 }
 
@@ -124,7 +121,6 @@ void handle_conn_accept(int socket) { //A-->B
     int requesting_socket = requested->pending_conn_req_sock;
     user* requesting = search_by_fdset_index(head,requesting_socket);
     if(!requesting) {
-        printf("[LOG] Was unconscious ack, dropped");
         return;
     }
     printf("[LOG] Sending connection ack from %s to %s\n",requested->username,requesting->username);
@@ -188,7 +184,7 @@ void handle_ready(int socket) {
     
     //BARRIER
     if(dual->status == PLAY_READY) {
-        printf("[LOG] Other user %s is ready to play.\n",dual->username);
+        printf("[LOG] Enemy user %s is ready to play.\n",dual->username);
         if(!send_int(socket,NULL,sr)) {
             client_crashed(socket);
             return;
@@ -206,7 +202,6 @@ void handle_ready(int socket) {
 void handle_match_end(int socket) {
     user* user_socket = search_by_fdset_index(head,socket);
     printf("[LOG] User %s is now free\n",user_socket->username);
-    //user* other_user = search_by_fdset_index(head,user_socket->pending_conn_req_sock);
     user_socket->status = FREE;
     user_socket->pending_conn_req_sock = -1;
 }

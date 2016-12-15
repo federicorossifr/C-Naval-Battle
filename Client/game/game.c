@@ -41,12 +41,12 @@ void ask_place() {
 }
 
 boolean synchronize() {
-    printf("[LOG]Sending ready ack to server\n");
+    //printf("[LOG]Sending ready ack to server\n");
     client_request ready_req = READY;
     server_response sr;
     if(!send_int(server_sock,NULL,ready_req)) return false;
     
-    printf("[LOG]Waiting for synchcronize signal\n");
+    printf("Waiting for enemy to be ready\n");
     
     fd_set master; FD_ZERO(&master);
     FD_SET(server_sock,&master);
@@ -56,7 +56,7 @@ boolean synchronize() {
         if(!recv_int(server_sock,NULL,(int*)&sr)) return false;
         return sr == MATCH_BEGIN;
     } else {
-        printf("[ERROR]Synchronize signal wait timed out, terminating\n");
+        printf("Waited too much time\n");
         return false;
     }
     
@@ -67,7 +67,7 @@ boolean synchronize() {
 void game_setup(int r) {
     char* ip = malloc(INET_ADDRSTRLEN+1);
     int udp_port;
-    printf("[LOG]User accepted request\n");
+    printf("User accepted request\n");
     
     
     if(recv(server_sock,(void*)ip,INET_ADDRSTRLEN+1,0) < INET_ADDRSTRLEN+1) {
@@ -83,11 +83,11 @@ void game_setup(int r) {
     
     setupAddress(&enemy_addr,udp_port,ip);
     game_state t = (r==0)?ALLY_IDLE:ENEMY_IDLE;
-    printf("[LOG]Ready to play\n");
+    //printf("[LOG]Ready to play\n");
     boards_initialize();
     ask_place();
     if(!synchronize()) {
-        printf("[ERROR] Failed to synchronize clients, leaving game.\n");
+        printf("Failed to setup match, exiting.\n");
         terminate_match();
         return;
     }
@@ -100,6 +100,7 @@ int handle_enemy_fire(char row,int col) {
     in_game_message result;
     in_game_message in_case_we_lose = YOU_WIN;
     int rem;
+    printf("Enemy fired: %c%d\n",row,col);
     res = try_hit(row,col,&rem);
     if(res != HIT) {
         printf("Our enemy missed! ;)\n");
@@ -108,10 +109,9 @@ int handle_enemy_fire(char row,int col) {
         printf("Our enemy hit our ship!!! MAYDAY!! :O\n");
         result = SHIP_HIT;
     }
-    printf("Remaining: %d\n\n",rem);
+    printf("Remaining battleships: %d\n\n",rem);
     
     boolean ress = send_int(game_socket,&enemy_addr,result);
-    printf("[LOG]Sended message %d\n",ress);
     if(rem == 0) {
         printf("It was our last ship, GAME OVER </3\n");
         send_int(game_socket,&enemy_addr,in_case_we_lose);
@@ -120,12 +120,10 @@ int handle_enemy_fire(char row,int col) {
 }
 
 void fire(char row,int col) {
-    printf("\nFire on %c%d\n",row,col);
     in_game_message fire_msg = FIRE;
     send_int(game_socket,&enemy_addr,fire_msg);
     sendto(game_socket,(void*)&row,sizeof(char),0,(sockaddr*)&enemy_addr,sizeof(enemy_addr));
     send_int(game_socket,&enemy_addr,col);
-    printf("[LOG]Fired!\n");
 }
 
 void surrend() {
@@ -135,16 +133,14 @@ void surrend() {
 }
 
 void demux_mesage(in_game_message msg,char row,int col) {
-    //sockaddr_in sndr; unsigned int len = sizeof(sndr);
-    printf("[LOG]Received %d\n",msg);
     switch(msg) {
         case SHIP_HIT:
-            printf("[LOG]Hit!\n"); 
-            mark_board(row,col,HIT); 
+            mark_board(row,col,HIT);
+            printf("Hit! :DD\n");
             break;
         case SHIP_MISSED:
-            printf("[LOG]Missed!\n"); 
             mark_board(row,col,MISSED); 
+            printf("Missed! :((\n");
             break;
         case SURR:
             printf("The enemy surrended\n");
@@ -169,14 +165,13 @@ boolean parse_command(game_state* state,char* r,int* c) {
             scanf("%1c%1d",r,c);
             *state = ALLY_WAIT;
             fire(*r,*c);
-            printf("[LOG]Waiting...\n");
             break;
         case 4: //show
             printf("\n**********************************************\n");
             printf("**|| 0 ship alive | X ship hit | ^ missed shot | - sea ||**\n");
-            printf("Your board:\n");
+            printf("\nYour board:\n");
             print_board(allies);
-            printf("Enemy's board:\n");
+            printf("\nEnemy's board:\n");
             print_board(enemies);
             printf("\n**********************************************\n");			
             break;
@@ -212,7 +207,6 @@ void game(game_state t) {
             if(FD_ISSET(fdescriptor,&read_ready)) {
                 timedout = false;
                 if(fdescriptor == game_socket) {
-                    printf("[LOG]Message in socket\n");
                     in_game_message msg; int msglen;
                     sockaddr_in sndr; unsigned int len = sizeof(sndr);
                     
@@ -229,12 +223,10 @@ void game(game_state t) {
                             break;
                         case ENEMY_FIRING:
                             msglen = recvfrom(game_socket,(void*)&row,sizeof(char),0,(sockaddr*)&sndr,&len);
-                            printf("[LOG]Enemy fired row %c\n",row);
                             state = ENEMY_FIRING_F;
                             break;
                         case ENEMY_FIRING_F:
                             msglen = recv_int(game_socket,&sndr,(int*)&col);
-                            printf("[LOG]Enemy fired col %d\n",col);
                             if(!handle_enemy_fire(row,col)) {
                                 terminate_match();
                                 return;
@@ -250,7 +242,7 @@ void game(game_state t) {
                     }
                     
                     if(msglen == 0) {
-                        perror("\n[ERROR]recvfrom");
+                        perror("\n[ERROR]recvfrom: ");
                         exit(1);
                     }
                     continue;
@@ -261,11 +253,11 @@ void game(game_state t) {
                     server_response sr; int res_len;
                     res_len = recv_int(server_sock,NULL,(int*)&sr);
                     if(res_len == 0) {
-                        printf("[ERROR] Server crashed\n");
+                        printf("Server crashed. Leaving\n");
                         return;
                     }
                     if(sr == MATCH_CRASHED) {
-                        printf("[LOG] Your enemy crashed. Nothing to do here\n");
+                        printf("Your enemy crashed. Nothing to do here\n");
                         terminate_match();
                         return;
                     }
@@ -273,7 +265,6 @@ void game(game_state t) {
                 }
                 
                 //STDIN
-                printf("[LOG]Reading in STDIN\n");
                 switch(state) {
                     case ALLY_IDLE:
                         if(parse_command(&state,&row,&col)) {
@@ -286,7 +277,7 @@ void game(game_state t) {
             }
         }
         if(timedout) {
-            printf("Timed out!\n");
+            printf("Game timed out,leaving!\n");
             terminate_match();
             return;
         }

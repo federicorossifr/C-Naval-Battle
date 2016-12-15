@@ -43,6 +43,7 @@ void printff(char* str) {
     fflush(stdout);
 }
 
+
 void print_help(menu_voice menu[],int length) {
     int i = 0;
     printf("\n");

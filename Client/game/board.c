@@ -68,10 +68,17 @@ board_cell_status try_hit(char named_row,int column,int* rem) {
 }
 
 void print_board(board_cell_status board[BOARD_SIZE][BOARD_SIZE]) {
-    int i,j;
+    int i,j,k;
+    char l = 'A';
+    printf("  ");
+    for(k = 1; k <= BOARD_SIZE;++k)
+        printf("%d ",k);
+    printf("\n");
     for(i = 0; i < BOARD_SIZE;++i) {
+        printf("%c ",l+i);
         for(j = 0; j < BOARD_SIZE;++j) {
             print_cell(board[i][j]);
+            printf(" ");
         }
         printf("\n");
     }
