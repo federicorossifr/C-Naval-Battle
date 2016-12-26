@@ -111,7 +111,7 @@ int handle_enemy_fire(char row,int col) {
     }
     printf("Remaining battleships: %d\n\n",rem);
     
-    boolean ress = send_int(game_socket,&enemy_addr,result);
+    send_int(game_socket,&enemy_addr,result);
     if(rem == 0) {
         printf("It was our last ship, GAME OVER </3\n");
         send_int(game_socket,&enemy_addr,in_case_we_lose);
