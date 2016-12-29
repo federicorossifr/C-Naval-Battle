@@ -195,7 +195,13 @@ void handle_ready(int socket) {
         }
         
         ready->status = dual->status = PLAYING;
-        
+    }
+    
+    if(dual->status == FREE) { //DUAL TIMED OUT
+        if(!send_int(socket,NULL,MATCH_CRASHED)) {
+            client_crashed(dual->fdset_index);
+            return;
+        }
     }
 }
 

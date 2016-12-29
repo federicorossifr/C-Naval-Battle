@@ -68,7 +68,6 @@ int main(int argc,char* argv[]) {
     struct timeval timeout = {10,0}; 
     /**********************************/
     
-    boolean timedout = true;
     char* username; char user_choose;
     for(;;) {
         switch(state) {
@@ -78,14 +77,19 @@ int main(int argc,char* argv[]) {
         read_ready = master;
         //check if in connection prompt state and activate the timer
         if(state == CLIENT_CONN_REQ1) {
-            select(fdmax+1,&read_ready,NULL,NULL,&timeout); // TIMER??
+            if(select(fdmax+1,&read_ready,NULL,NULL,&timeout) == 0) {
+                printf("Timedout request!\n");
+                do_send_invite_res(CONN_NAK);
+                state = CLIENT_IDLE;
+                timeout.tv_sec = 10;
+                continue;
+            }
         }
         else {
-            select(fdmax+1,&read_ready,NULL,NULL,NULL); // TIMER??
+            select(fdmax+1,&read_ready,NULL,NULL,NULL); 
         }
         for(fdescriptor = 0; fdescriptor <= fdmax; ++fdescriptor) {
             if(FD_ISSET(fdescriptor,&read_ready)) {
-                timedout = false;
                 if(fdescriptor == server_sock) {
                     client_request cn; server_response sr;
                     //server-handling FSM
@@ -138,15 +142,6 @@ int main(int argc,char* argv[]) {
                 }
             }
         }
-        if(timedout && state == CLIENT_CONN_REQ1) {
-            printf("Timedout request!\n");
-            do_send_invite_res(CONN_NAK);
-            state = CLIENT_IDLE;
-            timedout = false;
-        } else {
-            timedout = true;
-        }
-        timeout.tv_sec = 10;
     }
     close(server_sock);
     return 0;

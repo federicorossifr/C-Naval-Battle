@@ -64,7 +64,7 @@ int main(int argc,char* argv[]) {
     FD_SET(listener,&master);
     while(true) {
         read_ready = master;
-        select(fdmax+1,&read_ready,NULL,NULL,NULL);
+        if(select(fdmax+1,&read_ready,NULL,NULL,NULL) < 0) continue;
         for(fdescriptor = 0; fdescriptor <= fdmax; ++fdescriptor) {
             if(FD_ISSET(fdescriptor,&read_ready)) {
                 if(fdescriptor == listener) {

@@ -41,7 +41,6 @@ void ask_place() {
 }
 
 boolean synchronize() {
-    //printf("[LOG]Sending ready ack to server\n");
     client_request ready_req = READY;
     server_response sr;
     if(!send_int(server_sock,NULL,ready_req)) return false;
@@ -51,16 +50,14 @@ boolean synchronize() {
     fd_set master; FD_ZERO(&master);
     FD_SET(server_sock,&master);
     struct timeval timeout = {60,0};
-    select(server_sock+1,&master,NULL,NULL,&timeout); // TIMER
-    if(FD_ISSET(server_sock,&master)) {
-        if(!recv_int(server_sock,NULL,(int*)&sr)) return false;
-        return sr == MATCH_BEGIN;
-    } else {
+    int res = select(server_sock+1,&master,NULL,NULL,&timeout);
+    if(res == 0){
         printf("Waited too much time\n");
         return false;
+    } else if(res > 0) {
+        if(!recv_int(server_sock,NULL,(int*)&sr)) return false;
+        return sr == MATCH_BEGIN;
     }
-    
-    //can reach this point?
     return false;
 }
 
@@ -80,10 +77,8 @@ void game_setup(int r) {
         return;
     }
     
-    
     setupAddress(&enemy_addr,udp_port,ip);
     game_state t = (r==0)?ALLY_IDLE:ENEMY_IDLE;
-    //printf("[LOG]Ready to play\n");
     boards_initialize();
     ask_place();
     if(!synchronize()) {
@@ -194,7 +189,6 @@ void game(game_state t) {
     int fdescriptor;
     char row;int col;
     struct timeval timeout = {60,0};
-    boolean timedout = true;
     for(;;) {
         read_ready = master;
         switch(state) {
@@ -202,10 +196,14 @@ void game(game_state t) {
             case ENEMY_IDLE: printf("Enemy turn\n"); break;
             default:break;
         }
-        select(fdmax+1,&read_ready,NULL,NULL,&timeout); // TIMER
+        int res = select(fdmax+1,&read_ready,NULL,NULL,&timeout); // TIMER
+        if(res <= 0) {
+            printf("Game timed out,leaving!\n");
+            terminate_match();
+            return;
+        } 
         for(fdescriptor = 0; fdescriptor <= fdmax; ++fdescriptor) {
             if(FD_ISSET(fdescriptor,&read_ready)) {
-                timedout = false;
                 if(fdescriptor == game_socket) {
                     in_game_message msg; int msglen;
                     sockaddr_in sndr; unsigned int len = sizeof(sndr);
@@ -275,15 +273,6 @@ void game(game_state t) {
                     default: discard(); break;
                 }
             }
-        }
-        if(timedout) {
-            printf("Game timed out,leaving!\n");
-            terminate_match();
-            return;
-        }
-        else {
-            timedout = true;
-            timeout.tv_sec = 60;
         }
     }
 }
