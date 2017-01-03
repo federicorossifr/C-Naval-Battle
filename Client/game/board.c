@@ -91,3 +91,11 @@ void mark_board(char named_row,int column,board_cell_status sh) {
     if(!is_valid_coord(row,column)) return;
     enemies[row][column] = sh;
 }
+
+boolean can_shot_here(char n_row,int col) {
+    col--;
+    int row = get_int_row(n_row);
+    if(!is_valid_coord(row,col)) return false;
+    if(enemies[row][col] == MISSED || enemies[row][col] == HIT) return false;
+    return true;
+}

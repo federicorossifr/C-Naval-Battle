@@ -15,7 +15,7 @@ void handle_log_in(int socket) {
     user* found = search_by_username(head,username);
     if(!found)  {
         add_user(&head,port,username,socket);
-        printf("[LOG] User %s correctedly registered on %s:%d \n",username,get_ip_from_socket(socket),port);
+        printf("[LOG] User %s correctly registered on %s:%d \n",username,get_ip_from_socket(socket),port);
         res = true;
     }
     else res = false;
@@ -29,11 +29,10 @@ void handle_disconnect(int socket,fd_set* mstr) {
     close(socket);
     user* disconnecting = search_by_fdset_index(head,socket);
     if(disconnecting == NULL) {
-        printf("[LOG] Connection closed by client\n");
+        printf("[LOG] Connection closed while registering\n");
         return;
     }
     server_response nak = CONN_REJ; 
-    //pending request connection at con disclose
     if(disconnecting->pending_conn_req_sock > 0) {
         user* other = search_by_fdset_index(head,disconnecting->pending_conn_req_sock);
         if(disconnecting->status == CONNECTING) {
@@ -68,7 +67,6 @@ void handle_who(int socket,int count) {
     while(walk != NULL) {
         if(socket != walk->fdset_index) {
             if(!sendMessage(socket,NULL,walk->username,strlen(walk->username)+1)) client_crashed(socket);
-            
             if(!send_int(socket,NULL,walk->status)) client_crashed(socket);
         }
         walk = walk->next;
@@ -78,15 +76,14 @@ void handle_who(int socket,int count) {
 void handle_conn_req(int socket) {
     int msg_dim;
     char* username =(char*)receiveMessage(socket,NULL,&msg_dim);
-    user* requested = search_by_username(head,username);
-    user* requesting = search_by_fdset_index(head,socket);
+    user* requested = search_by_username(head,username); //user who receives request
+    user* requesting = search_by_fdset_index(head,socket); //user who made reques
     server_response sr;
     printf("[LOG] New request from %s to %s\n",requesting->username,username);
     if(requested == NULL || requested->fdset_index == socket) {
         sr = NOUSER;
         printf("[LOG] User not found or self request\n");
         if(!send_int(socket,NULL,sr)) client_crashed(socket);
-        
         return;
     }
     
@@ -94,29 +91,23 @@ void handle_conn_req(int socket) {
         sr = BUSYUSER;
         printf("[LOG] User busy\n");
         if(!send_int(socket,NULL,sr)) client_crashed(socket);
-        
         return;
     }
     
-    printf("[LOG] Sending request to %s\n",username);
+    printf("[LOG] Forwarding request to %s\n",username);
     requesting->status = CONNECTING;
     requested->status = CONNECTING;
     requested->pending_conn_req_sock = socket;
     requesting->pending_conn_req_sock = requested->fdset_index;
     
-    //forwarding request to client
     client_request ur = CONN_REQ;
     if(!send_int(requested->fdset_index,NULL,ur)) client_crashed(requested->fdset_index);
-    
-    if(!sendMessage(requested->fdset_index,NULL,requesting->username,strlen(requesting->username)+1)) client_crashed(requested->fdset_index);
-    
-    printf("[LOG] Sended\n");	
+    if(!sendMessage(requested->fdset_index,NULL,requesting->username,strlen(requesting->username)+1)) client_crashed(requested->fdset_index);    
 }
 
 
 
-void handle_conn_accept(int socket) { //A-->B
-    printf("[LOG] Connection ack received\n");
+void handle_conn_accept(int socket) {
     user* requested = search_by_fdset_index(head,socket);
     int requesting_socket = requested->pending_conn_req_sock;
     user* requesting = search_by_fdset_index(head,requesting_socket);
@@ -126,10 +117,9 @@ void handle_conn_accept(int socket) { //A-->B
     printf("[LOG] Sending connection ack from %s to %s\n",requested->username,requesting->username);
     server_response sr = CONN_OK;
     
-    //SEND_ CONN ACK + IP + UDP PORT TO CLIENT A
     if(!send_int(requesting_socket,NULL,sr)) client_crashed(socket);
     
-    printf("[LOG] Sending connection paramters to client %s\n", requesting->username);
+    printf("[LOG] Sending connection parameters to client %s\n", requesting->username);
     if(send(requesting_socket,(void*)requested->ip_addr,INET_ADDRSTRLEN+1,0) < INET_ADDRSTRLEN+1) {
         perror("[ERROR] Error sending IP to requested client");
         client_crashed(socket);
@@ -139,7 +129,6 @@ void handle_conn_accept(int socket) { //A-->B
     send_int(requesting_socket,NULL,requested->udp_port);
     
     
-    //SEND_ IP + UDP PORT TO CLIENT B
     send_int(socket,NULL,sr);
     printf("[LOG] Sending connection parameters to client %s\n", requested->username);
     if(send(socket,(void*)requesting->ip_addr,INET_ADDRSTRLEN+1,0) < INET_ADDRSTRLEN+1) {
@@ -154,8 +143,9 @@ void handle_conn_accept(int socket) { //A-->B
 }
 
 void handle_conn_refuse(int socket) {
-    printf("[LOG] Connection NAK received\n");
     user* requested = search_by_fdset_index(head,socket);
+    requested->status = FREE;
+    requested->pending_conn_req_sock = -1;    
     int requesting_socket = requested->pending_conn_req_sock;
     user* requesting = search_by_fdset_index(head,requesting_socket);
     if(!requesting) return;
@@ -163,8 +153,6 @@ void handle_conn_refuse(int socket) {
     server_response sr = CONN_REJ;
     requesting->status = FREE;
     requesting->pending_conn_req_sock = -1;
-    requested->status = FREE;
-    requested->pending_conn_req_sock = -1;	
     if(!send_int(requesting_socket,NULL,sr)) client_crashed(socket);
     
 }
@@ -193,7 +181,6 @@ void handle_ready(int socket) {
             client_crashed(socket);
             return;
         }
-        
         ready->status = dual->status = PLAYING;
     }
     

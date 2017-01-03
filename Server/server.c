@@ -14,7 +14,6 @@ void handle_conn_refuse(int socket);
 void handle_ready(int socket);
 void handle_match_end(int socket);
 void demux_command(client_request cmd,int socket) {
-    printf("[LOG] Received command: %d\n",cmd);
     switch(cmd) {
         case LOG_IN: 
             handle_log_in(socket);
@@ -26,7 +25,6 @@ void demux_command(client_request cmd,int socket) {
             handle_conn_req(socket);
             break;
         case CONN_ACK:
-            printf("[LOG] ACKING CONN\n");
             handle_conn_accept(socket);
             break;
         case CONN_REJ:
@@ -41,7 +39,6 @@ void demux_command(client_request cmd,int socket) {
         case QUIT:  
             handle_disconnect(socket,&master);
             break;
-        default: printf("[LOG] No action for: %d\n",cmd);
     }
 }
 

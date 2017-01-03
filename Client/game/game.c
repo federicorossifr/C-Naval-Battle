@@ -15,7 +15,6 @@ extern menu_voice GAME_MENU[];
 extern const int GAME_COUNT;
 extern board_cell_status allies[BOARD_SIZE][BOARD_SIZE];
 extern board_cell_status enemies[BOARD_SIZE][BOARD_SIZE];
-
 void game();
 void terminate_match() {
     client_request end_req = MATCH_END;
@@ -63,9 +62,7 @@ boolean synchronize() {
 
 void game_setup(int r) {
     char* ip = malloc(INET_ADDRSTRLEN+1);
-    int udp_port;
-    printf("User accepted request\n");
-    
+    int udp_port;    
     
     if(recv(server_sock,(void*)ip,INET_ADDRSTRLEN+1,0) < INET_ADDRSTRLEN+1) {
         terminate_match();
@@ -158,6 +155,10 @@ boolean parse_command(game_state* state,char* r,int* c) {
         case 3: //shot
             scanf("%1c",r); //garbage
             scanf("%1c%1d",r,c);
+            if(!can_shot_here(*r,*c)) {
+                printf("Cannot shot there! Try again...\n");
+                break;
+            }
             *state = ALLY_WAIT;
             fire(*r,*c);
             break;
@@ -166,7 +167,7 @@ boolean parse_command(game_state* state,char* r,int* c) {
             printf("**|| 0 ship alive | X ship hit | ^ missed shot | - sea ||**\n");
             printf("\nYour board:\n");
             print_board(allies);
-            printf("\nEnemy's board:\n");
+            printf("\nEnemy board:\n");
             print_board(enemies);
             printf("\n**********************************************\n");			
             break;
@@ -188,7 +189,7 @@ void game(game_state t) {
     int fdmax = (game_socket > server_sock)? game_socket:server_sock;
     int fdescriptor;
     char row;int col;
-    struct timeval timeout = {60,0};
+    struct timeval timeout = {5,0};
     for(;;) {
         read_ready = master;
         switch(state) {
@@ -198,7 +199,8 @@ void game(game_state t) {
         }
         int res = select(fdmax+1,&read_ready,NULL,NULL,&timeout); // TIMER
         if(res <= 0) {
-            printf("Game timed out,leaving!\n");
+            if(state == ENEMY_IDLE) printf("We won! Game timed out!\n");
+            else printf("\nGame timed out,leaving!\n");
             terminate_match();
             return;
         } 
@@ -240,14 +242,13 @@ void game(game_state t) {
                     }
                     
                     if(msglen == 0) {
-                        perror("\n[ERROR]recvfrom: ");
+                        perror("[ERROR]recvfrom: ");
                         exit(1);
                     }
                     continue;
                 }
                 
                 if(fdescriptor == server_sock) {
-                    //CAN ONLY RECEIVE MATCH_CRASHED MESSAGE
                     server_response sr; int res_len;
                     res_len = recv_int(server_sock,NULL,(int*)&sr);
                     if(res_len == 0) {
@@ -262,7 +263,6 @@ void game(game_state t) {
                     continue;
                 }
                 
-                //STDIN
                 switch(state) {
                     case ALLY_IDLE:
                         if(parse_command(&state,&row,&col)) {
