@@ -7,7 +7,7 @@ void setupAddress(sockaddr_in* ind,int port,char* addr) {
     if(addr != NULL) {
         status = inet_pton(AF_INET,addr,&ind->sin_addr);
         if(status <= 0) {
-            perror("inet_pton");
+            perror("[ERORR] inet_pton");
             exit(1);
         }
     }
@@ -19,7 +19,7 @@ int connectSocket(int sd,sockaddr_in* ind) {
     int status;
     status = connect(sd,(struct sockaddr*)ind,sizeof(*ind));
     if(status < 0) {
-        perror("connect");
+        perror("[ERROR] connect");
         exit(1);
     }
     return status;
@@ -30,7 +30,7 @@ int setupServerSocket(sockaddr_in* ind) {
     int sd = setupSocket(ind,SOCK_STREAM);
     status=listen(sd,10);
     if(status < 0) {
-        perror("listen");
+        perror("[ERROR] listen");
         exit(1);
     }
     return sd;
@@ -41,14 +41,14 @@ int setupSocket(sockaddr_in* ind,int type) {
     int status;
     
     if(d < 0) {
-        perror("socket");
+        perror("[ERROR] socket");
         exit(1);
     }
     
     if(ind == NULL) return d;
     status = bind(d,(struct sockaddr*)ind,sizeof(*ind));
     if(status < 0) {
-        perror("bind");
+        perror("[ERROR] bind");
         exit(1);
     }
     return d;
@@ -63,7 +63,7 @@ void* receiveMessage(int ds,sockaddr_in* src,int* msgdim) {
     
     recvBytes = recvfrom(ds,&net_recvMsgDim,sizeof(uint16_t),0,(struct sockaddr*)src,&addrDim);
     if(recvBytes < sizeof(uint16_t)) {
-        perror("Lenght receive error");
+        perror("[ERROR] receive_message length error (maybe endpoint disconnected)");
         *msgdim = recvBytes;
         return NULL;
     }
@@ -72,8 +72,7 @@ void* receiveMessage(int ds,sockaddr_in* src,int* msgdim) {
     
     recvBytes = recvfrom(ds,buffer,msg_dim,0,(struct sockaddr*)src,&addrDim);
     if(recvBytes < msg_dim) {
-        printf("%d %d\n",recvBytes,msg_dim);
-        perror("Message receive error");
+        perror("[ERROR] receive_message msg error (maybe endpoint disconnected)");
         *msgdim = recvBytes;
         return NULL;
     }
@@ -87,12 +86,12 @@ boolean sendMessage(int ds,sockaddr_in* dst,char* message,int length) {
     uint16_t nlen = htons(length);
     snddBytes = sendto(ds,&nlen,sizeof(uint16_t),0,(struct sockaddr*)dst,sizeof(*dst));
     if(snddBytes < sizeof(uint16_t)) {
-        perror("Length send error");
+        perror("[ERROR] send_message length error (maybe endpoint disconnected)");
         return false;
     }
     snddBytes = sendto(ds,message,length,0,(struct sockaddr*)dst,sizeof(*dst));
     if(snddBytes < length) {
-        perror("Mesage send error");
+        perror("[ERROR] send_message msg error (maybe endpoint disconnected)");
         return false;
     }
     return true;
@@ -113,7 +112,7 @@ boolean send_int(int ds,sockaddr_in* dst,int d) {
     int sended;
     sended = sendto(ds,&net_int,sizeof(uint32_t),0,(struct sockaddr*)dst,sizeof(*dst));
     if(sended < sizeof(uint32_t))
-        perror("SendInt error");
+        perror("[ERROR] send_int (maybe endpoint disconnected)");
     return sended == sizeof(uint32_t);
 }
 
@@ -124,6 +123,6 @@ boolean recv_int(int ds,sockaddr_in* src,int* d) {
     recvd = recvfrom(ds,&net_int,sizeof(uint32_t),0,(struct sockaddr*)src,&addrdim);
     *d = ntohl(net_int);
     if(recvd < sizeof(uint32_t))
-        perror("RecvInt error");
+        perror("[ERROR] recv_int (maybe endpoint disconnected)");
     return recvd == sizeof(uint32_t);
 }

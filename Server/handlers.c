@@ -189,6 +189,7 @@ void handle_ready(int socket) {
             client_crashed(dual->fdset_index);
             return;
         }
+        ready->status = FREE;
     }
 }
 
