@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -m32
+CFLAGS=-Wall
 CLI=Client/clinterface
 GME=Client/game
 LIBF=build/lib

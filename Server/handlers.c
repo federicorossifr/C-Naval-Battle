@@ -42,7 +42,7 @@ void handle_disconnect(int socket,fd_set* mstr) {
                 return;
             }
             if(other) other->status = FREE;
-        } else if(disconnecting->status == PLAYING) {
+        } else if(disconnecting->status == PLAYING || disconnecting->status == BUSY) {
             printf("[LOG] User was playing, signaling crashed match\n");
             if(!send_int(disconnecting->pending_conn_req_sock,NULL,MATCH_CRASHED)) {
                 client_crashed(disconnecting->pending_conn_req_sock);
