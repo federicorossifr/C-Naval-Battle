@@ -77,7 +77,7 @@ int main(int argc,char* argv[]) {
         read_ready = master;
         //check if in connection prompt state and activate the timer
         if(state == CLIENT_CONN_REQ1) {
-            if(select(fdmax+1,&read_ready,NULL,NULL,&timeout) == 0) {
+            if(select(fdmax+1,&read_ready,NULL,NULL,&timeout) <= 0) {
                 printf("Timedout request!\n");
                 do_send_invite_res(CONN_NAK);
                 state = CLIENT_IDLE;
