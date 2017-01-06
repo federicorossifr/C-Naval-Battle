@@ -189,7 +189,7 @@ void game(game_state t) {
     int fdmax = (game_socket > server_sock)? game_socket:server_sock;
     int fdescriptor;
     char row;int col;
-    struct timeval timeout = {5,0};
+    struct timeval timeout = {60,0};
     for(;;) {
         read_ready = master;
         switch(state) {
@@ -203,7 +203,9 @@ void game(game_state t) {
             else printf("\nGame timed out,leaving!\n");
             terminate_match();
             return;
-        } 
+        } else {
+		timeout.tv_sec = 60;
+	}
         for(fdescriptor = 0; fdescriptor <= fdmax; ++fdescriptor) {
             if(FD_ISSET(fdescriptor,&read_ready)) {
                 if(fdescriptor == game_socket) {
