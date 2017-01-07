@@ -71,7 +71,7 @@ int main(int argc,char* argv[]) {
     char* username; char user_choose;
     for(;;) {
         switch(state) {
-            case CLIENT_IDLE: printff(&prompt); break;
+            case CLIENT_IDLE: printff("\r>"); break;
             default:break;
         }
         read_ready = master;
@@ -114,6 +114,13 @@ int main(int argc,char* argv[]) {
                                 printf("\nClient prematurely shutted down\n");
                             }
                             state = CLIENT_IDLE;
+                            continue;
+                        case CLIENT_CONN_REQ1:
+                            msglen = recv_int(server_sock,NULL,(int*)&sr);
+                            if(sr != CONN_OK) {
+                                printf("\nClient prematurely shutted down\n");
+                                state = CLIENT_IDLE;
+                            }
                             continue;
                         default: break;
                     }

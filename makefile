@@ -44,3 +44,5 @@ all: $(TARGETS)
 	
 clean:
 	rm $(LIBF)/*
+export:
+	tar --exclude .directory  -cvzf src.tgz Client Server Utilities

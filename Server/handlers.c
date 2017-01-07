@@ -172,7 +172,7 @@ void handle_ready(int socket) {
     
     //BARRIER
     if(dual->status == PLAY_READY) {
-        printf("[LOG] Enemy user %s is ready to play.\n",dual->username);
+        printf("[LOG] Users are ready to play. Match is starting.\n");
         if(!send_int(socket,NULL,sr)) {
             client_crashed(socket);
             return;
@@ -195,6 +195,12 @@ void handle_ready(int socket) {
 
 void handle_match_end(int socket) {
     user* user_socket = search_by_fdset_index(head,socket);
+    user* other = search_by_fdset_index(head,user_socket->pending_conn_req_sock);
+    if(other && other->status == BUSY) {
+        if(!send_int(other->fdset_index,NULL,MATCH_CRASHED)) {
+            client_crashed(other->fdset_index);
+        }
+    }
     printf("[LOG] User %s is now free\n",user_socket->username);
     user_socket->status = FREE;
     user_socket->pending_conn_req_sock = -1;

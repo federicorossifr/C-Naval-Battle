@@ -5,7 +5,7 @@ typedef enum turn {
     YOU,ENEMY
 } turn;
 typedef enum game_state {
-    ENEMY_FIRING,ENEMY_FIRING_F,ALLY_FIRING,ALLY_IDLE,ENEMY_IDLE,ALLY_WAIT
+    ENEMY_FIRING,ENEMY_FIRING_F,ALLY_FIRING,ALLY_IDLE,ENEMY_IDLE,ALLY_WAIT, PLACING, SYN
 } game_state;
 
 sockaddr_in enemy_addr;
@@ -19,45 +19,6 @@ void game();
 void terminate_match() {
     client_request end_req = MATCH_END;
     send_int(server_sock,NULL,end_req);
-}
-
-void ask_place() {
-    int i; char row; int col;
-    printf("Place your battleships\n");
-    printf("%d\n",BATTLESHIPS_NUMBER);
-    for(i = 0; i < BATTLESHIPS_NUMBER;++i) {
-        printf("Number %d: ",i+1);
-        fflush(stdout);
-        discard();
-        scanf("%1c%1d",&row,&col);
-        if(place_battelship(row,col)) {		
-            printf("Inserted battleship at %c%d\n",row,col);
-            continue;
-        }
-        printf("Error placing battleship in %c%d.\n",row,col);
-        i--;
-    }
-}
-
-boolean synchronize() {
-    client_request ready_req = READY;
-    server_response sr;
-    if(!send_int(server_sock,NULL,ready_req)) return false;
-    
-    printf("Waiting for enemy to be ready\n");
-    
-    fd_set master; FD_ZERO(&master);
-    FD_SET(server_sock,&master);
-    struct timeval timeout = {60,0};
-    int res = select(server_sock+1,&master,NULL,NULL,&timeout);
-    if(res == 0){
-        printf("Waited too much time\n");
-        return false;
-    } else if(res > 0) {
-        if(!recv_int(server_sock,NULL,(int*)&sr)) return false;
-        return sr == MATCH_BEGIN;
-    }
-    return false;
 }
 
 void game_setup(int r) {
@@ -77,20 +38,12 @@ void game_setup(int r) {
     setupAddress(&enemy_addr,udp_port,ip);
     game_state t = (r==0)?ALLY_IDLE:ENEMY_IDLE;
     boards_initialize();
-    ask_place();
-    if(!synchronize()) {
-        printf("Failed to setup match, exiting.\n");
-        terminate_match();
-        return;
-    }
-    game(t);
-    
+    game(t); 
 }
 
 int handle_enemy_fire(char row,int col) {
     board_cell_status res;
     in_game_message result;
-    in_game_message in_case_we_lose = YOU_WIN;
     int rem;
     printf("Enemy fired: %c%d\n",row,col);
     res = try_hit(row,col,&rem);
@@ -106,22 +59,20 @@ int handle_enemy_fire(char row,int col) {
     send_int(game_socket,&enemy_addr,result);
     if(rem == 0) {
         printf("It was our last ship, GAME OVER </3\n");
-        send_int(game_socket,&enemy_addr,in_case_we_lose);
+        send_int(game_socket,&enemy_addr,YOU_WIN);
     }
     return rem;
 }
 
 void fire(char row,int col) {
-    in_game_message fire_msg = FIRE;
-    send_int(game_socket,&enemy_addr,fire_msg);
+    send_int(game_socket,&enemy_addr,FIRE);
     sendto(game_socket,(void*)&row,sizeof(char),0,(sockaddr*)&enemy_addr,sizeof(enemy_addr));
     send_int(game_socket,&enemy_addr,col);
 }
 
 void surrend() {
     printf("You have surrended! Maybe next time :P\n");
-    in_game_message surr_msg = SURR;
-    send_int(game_socket,&enemy_addr,surr_msg);
+    send_int(game_socket,&enemy_addr,SURR);
 }
 
 void demux_mesage(in_game_message msg,char row,int col) {
@@ -180,12 +131,13 @@ boolean parse_command(game_state* state,char* r,int* c) {
 
 
 void game(game_state t) {
-    game_state state = t;
+    game_state state = PLACING;
     fd_set master; FD_ZERO(&master);
     fd_set read_ready; FD_ZERO(&read_ready);
     FD_SET(game_socket,&master);
     FD_SET(STDIN,&master);
     FD_SET(server_sock,&master);
+    int placed = 0;
     int fdmax = (game_socket > server_sock)? game_socket:server_sock;
     int fdescriptor;
     char row;int col;
@@ -193,10 +145,12 @@ void game(game_state t) {
     for(;;) {
         read_ready = master;
         switch(state) {
-            case ALLY_IDLE: printf("Your turn\n");printff("#");break;
+            case ALLY_IDLE:  printf("Your turn\n");printff("#");break;
             case ENEMY_IDLE: printf("Enemy turn\n"); break;
+            case PLACING:    printf("Place battleship number %d: ",placed+1); fflush(stdout); break;
             default:break;
         }
+        
         int res = select(fdmax+1,&read_ready,NULL,NULL,&timeout); // TIMER
         if(res <= 0) {
             if(state == ENEMY_IDLE) printf("We won! Game timed out!\n");
@@ -206,8 +160,11 @@ void game(game_state t) {
         } else {
 		timeout.tv_sec = 60;
 	}
+	
         for(fdescriptor = 0; fdescriptor <= fdmax; ++fdescriptor) {
             if(FD_ISSET(fdescriptor,&read_ready)) {
+                
+                //MESSAGE FROM GAME SOCKET
                 if(fdescriptor == game_socket) {
                     in_game_message msg; int msglen;
                     sockaddr_in sndr; unsigned int len = sizeof(sndr);
@@ -215,6 +172,10 @@ void game(game_state t) {
                     switch(state) {
                         case ENEMY_IDLE:
                             msglen = recv_int(game_socket,&sndr,(int*)&msg);
+                            if(msglen == 0) {
+                                terminate_match();                                
+                                return;
+                            }   
                             if(msg == FIRE) state=ENEMY_FIRING;
                             if(msg == SURR) printf("The enemy surrended\n");
                             if(msg == YOU_WIN || msg == SURR) {
@@ -225,10 +186,18 @@ void game(game_state t) {
                             break;
                         case ENEMY_FIRING:
                             msglen = recvfrom(game_socket,(void*)&row,sizeof(char),0,(sockaddr*)&sndr,&len);
+                            if(msglen == 0) {
+                                terminate_match();                                
+                                return;
+                            }   
                             state = ENEMY_FIRING_F;
                             break;
                         case ENEMY_FIRING_F:
                             msglen = recv_int(game_socket,&sndr,(int*)&col);
+                            if(msglen == 0) {
+                                terminate_match();                                
+                                return;
+                            }   
                             if(!handle_enemy_fire(row,col)) {
                                 terminate_match();
                                 return;
@@ -237,6 +206,10 @@ void game(game_state t) {
                             break;
                         case ALLY_WAIT:
                             msglen = recv_int(game_socket,&enemy_addr,(int*)&msg);
+                            if(msglen == 0) {
+                                terminate_match();                                
+                                return;
+                            }                            
                             demux_mesage(msg,row,col);
                             state = ENEMY_IDLE;
                             break;
@@ -244,12 +217,13 @@ void game(game_state t) {
                     }
                     
                     if(msglen == 0) {
-                        perror("[ERROR]recvfrom: ");
-                        exit(1);
+                        terminate_match();
+                        return;
                     }
                     continue;
                 }
                 
+                //MESSAGE FROM SERVER
                 if(fdescriptor == server_sock) {
                     server_response sr; int res_len;
                     res_len = recv_int(server_sock,NULL,(int*)&sr);
@@ -257,19 +231,41 @@ void game(game_state t) {
                         printf("Server crashed. Leaving\n");
                         return;
                     }
+                    if(state == SYN && sr == MATCH_BEGIN) {
+                        state = t;
+                        continue;
+                    }
                     if(sr == MATCH_CRASHED) {
-                        printf("Your enemy crashed. Nothing to do here\n");
+                        printf("\nYour enemy crashed or timedout. Nothing to do here\n");
                         terminate_match();
                         return;
                     }
                     continue;
                 }
                 
+                //MESSAGE FROM STDIN
                 switch(state) {
                     case ALLY_IDLE:
                         if(parse_command(&state,&row,&col)) {
                             terminate_match();
                             return; 
+                        }
+                        break;
+                    case PLACING:
+                        scanf(" %1c%1d",&row,&col);
+                        if(place_battelship(row,col)) {
+                            printf("Inserted battleship at %c%d\n",row,col);
+                            placed++;
+                        } else {
+                            printf("Error placing battleship in %c%d.\n",row,col);
+                        }
+                        if(placed == BATTLESHIPS_NUMBER) {
+                            if(!send_int(server_sock,NULL,MATCH_BEGIN)) {
+                                terminate_match();
+                                return;
+                            }
+                            printf("Waiting for enemy to be ready\n");
+                            state = SYN;
                         }
                         break;
                     default: discard(); break;

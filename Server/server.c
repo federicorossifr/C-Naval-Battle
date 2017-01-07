@@ -61,7 +61,10 @@ int main(int argc,char* argv[]) {
     FD_SET(listener,&master);
     while(true) {
         read_ready = master;
-        if(select(fdmax+1,&read_ready,NULL,NULL,NULL) < 0) continue;
+        if(select(fdmax+1,&read_ready,NULL,NULL,NULL) <= 0) {
+            perror("[ERROR] Select");
+            exit(1);
+        }
         for(fdescriptor = 0; fdescriptor <= fdmax; ++fdescriptor) {
             if(FD_ISSET(fdescriptor,&read_ready)) {
                 if(fdescriptor == listener) {
@@ -80,7 +83,6 @@ int main(int argc,char* argv[]) {
                     continue;
                 }
                 boolean res; client_request msg;
-                //receive command from client
                 res = recv_int(fdescriptor,NULL,(int*)&msg);
                 if(res == 0) {
                     handle_disconnect(fdescriptor,&master);
