@@ -236,6 +236,7 @@ void game(game_state t) {
                         continue;
                     } 
 		    if(state == SYN && sr != MATCH_BEGIN) {
+                        printf("\nYour enemy crashed or timedout. Nothing to do here\n");
 			terminate_match();
 			return;
 		    }
