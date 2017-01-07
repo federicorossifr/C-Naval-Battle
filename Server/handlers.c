@@ -145,8 +145,8 @@ void handle_conn_accept(int socket) {
 void handle_conn_refuse(int socket) {
     user* requested = search_by_fdset_index(head,socket);
     requested->status = FREE;
-    requested->pending_conn_req_sock = -1;    
     int requesting_socket = requested->pending_conn_req_sock;
+    requested->pending_conn_req_sock = -1;    
     user* requesting = search_by_fdset_index(head,requesting_socket);
     if(!requesting) return;
     printf("[LOG] Sending connection nak from %s to %s",requested->username,requesting->username);

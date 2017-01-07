@@ -41,8 +41,12 @@ battle_client: $(CLI_DEPS_F)
 	$(CC) $(CLI_DEPS_F) -o $@ $(CFLAGS)
 
 all: $(TARGETS)	
+
+install: $(TARGETS)
+	cp battle_client /usr/bin/;
+	cp battle_server /usr/bin/;
 	
 clean:
 	rm $(LIBF)/*
 export:
-	tar --exclude .directory  -cvzf src.tgz Client Server Utilities
+	tar --exclude .directory  -cvzf rossi_516382.tgz Client Server Utilities
