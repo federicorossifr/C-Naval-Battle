@@ -12,7 +12,7 @@ void handle_conn_req(int socket);
 void handle_conn_accept(int socket);
 void handle_conn_refuse(int socket);
 void handle_ready(int socket);
-void handle_match_end(int socket);
+void handle_match_end(int,boolean);
 void demux_command(client_request cmd,int socket) {
     switch(cmd) {
         case LOG_IN: 
@@ -34,7 +34,10 @@ void demux_command(client_request cmd,int socket) {
             handle_ready(socket);
             break;
         case MATCH_END:
-            handle_match_end(socket);
+            handle_match_end(socket,false);
+            break;
+        case MATCH_TOUT:        
+            handle_match_end(socket,true);
             break;
         case QUIT:  
             handle_disconnect(socket,&master);

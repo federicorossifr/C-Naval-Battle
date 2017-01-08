@@ -17,8 +17,11 @@ extern board_cell_status allies[BOARD_SIZE][BOARD_SIZE];
 extern board_cell_status enemies[BOARD_SIZE][BOARD_SIZE];
 void game();
 void terminate_match() {
-    client_request end_req = MATCH_END;
-    send_int(server_sock,NULL,end_req);
+    send_int(server_sock,NULL,MATCH_END);
+}
+
+void terminate_match_timeout() {
+    send_int(server_sock,NULL,MATCH_TOUT);
 }
 
 void game_setup(int r) {

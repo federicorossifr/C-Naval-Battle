@@ -193,10 +193,10 @@ void handle_ready(int socket) {
     }
 }
 
-void handle_match_end(int socket) {
+void handle_match_end(int socket,boolean timeout) {
     user* user_socket = search_by_fdset_index(head,socket);
     user* other = search_by_fdset_index(head,user_socket->pending_conn_req_sock);
-    if(other) {
+    if(other && timeout) {
         if(!send_int(other->fdset_index,NULL,MATCH_CRASHED)) {
             client_crashed(other->fdset_index);
         }
