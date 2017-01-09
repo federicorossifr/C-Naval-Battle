@@ -182,7 +182,7 @@ void game(game_state t) {
                             if(msg == FIRE) state=ENEMY_FIRING;
                             if(msg == SURR) printf("The enemy surrended\n");
                             if(msg == YOU_WIN || msg == SURR) {
-                                printf("We won this battle, but not the war!\n"); 
+                                printf("WE WON! <3\n"); 
                                 terminate_match();
                                 return;
                             }

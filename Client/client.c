@@ -4,7 +4,7 @@ extern const int MAIN_COUNT;
 extern menu_voice MAIN_MENU[];
 int server_sock; 
 int game_socket;
-char prompt = '>';
+
 
 void do_log_in();
 void do_disconnect(void);
@@ -127,6 +127,7 @@ int main(int argc,char* argv[]) {
                     if(msglen <=0) {
                         printf("\nServer gone down\n");
                         close(server_sock);
+			close(game_socket);
                         return 0;
                     }
                     continue;
@@ -134,7 +135,7 @@ int main(int argc,char* argv[]) {
                 //STDIN
                 if(state == CLIENT_CONN_REQ1) {
                     fflush(stdout);
-                    user_choose = getchar(); //discard();
+                    user_choose = getchar();
                     user_choose = tolower(user_choose);
                     if(user_choose == 'y') {
                         printf("Match is starting\n");
@@ -150,6 +151,4 @@ int main(int argc,char* argv[]) {
             }
         }
     }
-    close(server_sock);
-    return 0;
 }

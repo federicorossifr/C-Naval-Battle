@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-Wall -m32
 CLI=Client/clinterface
 GME=Client/game
-LIBF=build/lib
+LIBF=build
 UTI=Utilities/utility.h
 CLI_DEPS_F = $(LIBF)/utility.o $(LIBF)/cli.o $(LIBF)/board.o $(LIBF)/game.o $(LIBF)/client.o $(LIBF)/doers.o
 SRV_DEPS_F = $(LIBF)/utility.o $(LIBF)/handlers.o $(LIBF)/user.o $(LIBF)/server.o
@@ -47,6 +47,10 @@ install: $(TARGETS)
 	cp battle_server /usr/bin/;
 	
 clean:
-	rm $(LIBF)/*
-export:
+	rm $(LIBF)/*;
+	rm battle_client;
+	rm battle_server;
+export_src:
 	tar --exclude .directory  -cvzf rossi_516382.tgz Client Server Utilities
+export:
+	tar --exclude .directory -cvzf naval_battle.tgz Client Server Utilities makefile
