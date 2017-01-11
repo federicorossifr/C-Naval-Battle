@@ -158,7 +158,7 @@ void game(game_state t) {
         if(res <= 0) {
             if(state == ENEMY_IDLE) printf("We won! Game timed out!\n");
             else printf("\nGame timed out,leaving!\n");
-            terminate_match();
+            terminate_match_timeout();
             return;
         } else {
 		timeout.tv_sec = 60;
