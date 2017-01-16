@@ -50,7 +50,6 @@ clean:
 	rm $(LIBF)/*;
 	rm battle_client;
 	rm battle_server;
-export_src:
-	tar --exclude .directory  -cvzf rossi_516382.tgz Client Server Utilities
+	rm naval_battle.tgz;
 export:
 	tar --exclude .directory -cvzf naval_battle.tgz Client Server Utilities makefile
