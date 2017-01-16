@@ -41,7 +41,8 @@ battle_client: $(CLI_DEPS_F)
 	$(CC) $(CLI_DEPS_F) -o $@ $(CFLAGS)
 
 all: $(TARGETS)	
-
+prepare:
+	mkdir build;
 install: $(TARGETS)
 	cp battle_client /usr/bin/;
 	cp battle_server /usr/bin/;
@@ -50,6 +51,5 @@ clean:
 	rm $(LIBF)/*;
 	rm battle_client;
 	rm battle_server;
-	rm naval_battle.tgz;
 export:
 	tar --exclude .directory -cvzf naval_battle.tgz Client Server Utilities makefile
